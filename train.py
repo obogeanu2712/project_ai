@@ -21,6 +21,9 @@ data.dropna(inplace=True)
 # Call the encode function to encode the data
 data_encoder, target_encoder = encode(data, target_column='ADM-DECS')
 
+# Write the current DataFrame to a CSV file
+data.to_csv('processed_data.csv', index=False)
+
 # Scale the features
 
 # scaler = StandardScaler()
@@ -53,7 +56,7 @@ processed_data = {
 print("Data has been processed and is ready for the MLP classifier.")
 
 # Define the MLP classifier
-mlp = MLPClassifier(hidden_layer_sizes=(12, 24), max_iter=10000, random_state=42)
+mlp = MLPClassifier(hidden_layer_sizes=(12, 6), max_iter=1000, random_state=42)
 
 # Train the MLP classifier
 
