@@ -7,7 +7,6 @@ import seaborn as sns
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import accuracy_score, mean_squared_error
 
-
 # Load the dataset
 file_path = 'post-operative.data'
 
@@ -24,11 +23,6 @@ data_encoder, target_encoder = encode(data, target_column='ADM-DECS')
 # Write the current DataFrame to a CSV file
 data.to_csv('processed_data.csv', index=False)
 
-# Scale the features
-
-# scaler = StandardScaler()
-# data = scaler.fit_transform(data)
-
 data = pd.DataFrame(data)
 
 # print(type(data))
@@ -40,35 +34,36 @@ y = data.iloc[:, -1]
 
 
 # Split the data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-# Save the processed data for the MLP classifier
-processed_data = {
-    'X_train': X_train,
-    'X_test': X_test,
-    'y_train': y_train,
-    'y_test': y_test,
-    'label_encoders': data_encoder,
-    'target_encoder': target_encoder,
-    # 'scaler': scaler
-}
-
-print("Data has been processed and is ready for the MLP classifier.")
-
-# Define the MLP classifier
-mlp = MLPClassifier(hidden_layer_sizes=(12, 6), max_iter=1000, random_state=42)
-
-# Train the MLP classifier
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)
 
 y_train = y_train.values.ravel()
 y_test = y_test.values.ravel()
 
-mlp.fit(X_train, y_train)
+perceptrons = [(12, ), (12, 6), (12, 24), (12, 12)]
 
-# Make predictions
-y_pred = mlp.predict(X_test)
+# Initialize a dictionary to store results
+results = {}
 
-# Evaluate the model
-accuracy = accuracy_score(y_test, y_pred)
-print(f"Accuracy of the MLP classifier: {accuracy:.2f}")
+# Loop through the perceptrons and evaluate each configuration
+for perceptron in perceptrons:
+    # Define the MLP classifier with the current perceptron configuration
+    mlp = MLPClassifier(hidden_layer_sizes=perceptron, max_iter=1000, random_state=42, learning_rate='constant', learning_rate_init=0.1, solver='sgd', activation='logistic')
+    
+    # Train the MLP classifier
+    
+    mlp.fit(X_train, y_train)
+    
+    # Make predictions
+    y_pred = mlp.predict(X_test)
+    
+    # Evaluate the model
+    accuracy = accuracy_score(y_test, y_pred)
+    mse = mean_squared_error(y_test, y_pred)
+    
+    # Store the results in the dictionary
+    results[perceptron] = {'accuracy': accuracy, 'mse': mse}
+
+# Print the results
+for perceptron, metrics in results.items():
+    print(f"Perceptron {perceptron}: Accuracy = {metrics['accuracy']:.12f}, MSE = {metrics['mse']:.12f}")
 
