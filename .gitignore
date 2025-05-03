@@ -1,3 +1,4 @@
 processed_data_scaled.csv
 processed_data_unscaled.csv
 processed_data.csv
+__pycache__/
