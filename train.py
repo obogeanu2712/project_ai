@@ -1,7 +1,9 @@
 import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from encode import encode
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from encode import encode_columns
 from matrix_corr import correlation_matrix
 import seaborn as sns
 from sklearn.neural_network import MLPClassifier
@@ -10,7 +12,11 @@ from sklearn.metrics import accuracy_score, mean_squared_error
 # Load the dataset
 file_path = 'post-operative.data'
 
-columns = ['L-CORE', 'L-SURF', 'L-O2', 'L-BP', 'SURF-STBL', 'CORE-STBL', 'BP-STBL', 'COMFORT', 'ADM-DECS']
+columns = np.array(['L-CORE', 'L-SURF', 'L-O2', 'L-BP', 'SURF-STBL', 'CORE-STBL', 'BP-STBL', 'COMFORT', 'ADM-DECS'])
+
+catgorical_columns = columns[:-2]
+
+target_column = columns[-1]
 
 data = pd.read_csv(file_path, header=None, names=columns, na_values='?')
 
@@ -18,20 +24,26 @@ data = pd.read_csv(file_path, header=None, names=columns, na_values='?')
 data.dropna(inplace=True)
 
 # Call the encode function to encode the data
-data_encoder, target_encoder = encode(data, target_column='ADM-DECS')
+
+# Encode categorical columns
+encoders = encode_columns(data, categorical_columns=catgorical_columns, target_column=target_column) #returns a dict
 
 # Write the current DataFrame to a CSV file
-data.to_csv('processed_data.csv', index=False)
+data.to_csv('processed_data_unscaled.csv', index=False)
+
+# Scale the features
+scaler = MinMaxScaler()
+for col in columns:  # Exclude the target column from scaling
+    data[col] = scaler.fit_transform(data[[col]])
+
+# Write the current DataFrame to a CSV file
+data.to_csv('processed_data_scaled.csv', index=False)
 
 data = pd.DataFrame(data)
-
-# print(type(data))
 
 # Separate features and target
 X = data.iloc[:, :-1]
 y = data.iloc[:, -1]
-
-
 
 # Split the data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)
@@ -58,12 +70,11 @@ for perceptron in perceptrons:
     
     # Evaluate the model
     accuracy = accuracy_score(y_test, y_pred)
-    mse = mean_squared_error(y_test, y_pred)
     
     # Store the results in the dictionary
-    results[perceptron] = {'accuracy': accuracy, 'mse': mse}
+    results[perceptron] = {'accuracy': accuracy}
 
 # Print the results
 for perceptron, metrics in results.items():
-    print(f"Perceptron {perceptron}: Accuracy = {metrics['accuracy']:.12f}, MSE = {metrics['mse']:.12f}")
+    print(f"Perceptron {perceptron}: Accuracy = {metrics['accuracy']:.12f}")
 
